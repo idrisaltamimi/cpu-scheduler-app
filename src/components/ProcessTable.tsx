@@ -84,8 +84,8 @@ export function ProcessTable({
 
   const handleKeyDown = (
     e: React.KeyboardEvent,
-    index: number,
-    field: 'pid' | 'arrivalTime' | 'burstTime' | 'priority'
+    _index: number,
+    _field: 'pid' | 'arrivalTime' | 'burstTime' | 'priority'
   ) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
       setEditingCell(null);
