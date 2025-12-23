@@ -8,5 +8,5 @@ export default defineConfig({
     globals: true,
     environment: "node"
   },
-  base: "/cpu-scheduler-app/"
+  base: "/"
 })
