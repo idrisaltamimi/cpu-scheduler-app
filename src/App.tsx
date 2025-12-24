@@ -1,52 +1,61 @@
-import { useState, useEffect, useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   Header,
   ProcessTable,
   Controls,
   GanttChart,
   MetricsCards,
-  ResultsTable,
-} from './components';
-import { simulateSchedule } from './lib/scheduler';
-import type { Process, Algorithm, SimulationResult } from './types';
+  ResultsTable
+} from "./components"
+import { simulateSchedule } from "./lib/scheduler"
+import type { Process, Algorithm, SimulationResult } from "./types"
 
 function App() {
   // Dark mode state
   const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('darkMode');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("darkMode")
       if (saved !== null) {
-        return JSON.parse(saved);
+        return JSON.parse(saved)
       }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
     }
-    return false;
-  });
+    return false
+  })
 
   // Process list state
-  const [processes, setProcesses] = useState<Process[]>([]);
+  const [processes, setProcesses] = useState<Process[]>([])
 
   // Algorithm state
-  const [algorithm, setAlgorithm] = useState<Algorithm>('FCFS');
-  const [quantum, setQuantum] = useState(2);
+  const [algorithm, setAlgorithm] = useState<Algorithm>("FCFS")
+  const [quantum, setQuantum] = useState(2)
 
   // Simulation results
-  const [result, setResult] = useState<SimulationResult | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
+  const [result, setResult] = useState<SimulationResult | null>(null)
+  const [isRunning, setIsRunning] = useState(false)
 
   // Apply dark mode to document
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark")
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark")
     }
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-  }, [darkMode]);
+    localStorage.setItem("darkMode", JSON.stringify(darkMode))
+  }, [darkMode])
+
+  // Custom handler for process changes that also clears results when needed
+  const handleProcessesChange = (newProcesses: Process[]) => {
+    setProcesses(newProcesses)
+    // Clear results if all processes are removed
+    if (newProcesses.length === 0 && result !== null) {
+      setResult(null)
+    }
+  }
 
   // Get all PIDs for color mapping
-  const allPids = useMemo(() => processes.map((p) => p.pid), [processes]);
+  const allPids = useMemo(() => processes.map((p) => p.pid), [processes])
 
   // Check if we can run the simulation
   const canRun = useMemo(() => {
@@ -54,48 +63,45 @@ function App() {
       processes.length > 0 &&
       processes.every(
         (p) =>
-          p.pid.trim() !== '' &&
-          p.arrivalTime >= 0 &&
-          p.burstTime > 0 &&
-          p.priority >= 0
+          p.pid.trim() !== "" && p.arrivalTime >= 0 && p.burstTime > 0 && p.priority >= 0
       )
-    );
-  }, [processes]);
+    )
+  }, [processes])
 
   // Run the simulation
   const handleRun = () => {
-    if (!canRun) return;
+    if (!canRun) return
 
-    setIsRunning(true);
+    setIsRunning(true)
 
     // Small delay for visual feedback
     setTimeout(() => {
-      const simulationResult = simulateSchedule(processes, algorithm, quantum);
-      setResult(simulationResult);
-      setIsRunning(false);
-    }, 300);
-  };
+      const simulationResult = simulateSchedule(processes, algorithm, quantum)
+      setResult(simulationResult)
+      setIsRunning(false)
+    }, 300)
+  }
 
   // Reset results
   const handleReset = () => {
-    setResult(null);
-  };
+    setResult(null)
+  }
 
   // Toggle dark mode
   const toggleDarkMode = () => {
-    setDarkMode((prev: boolean) => !prev);
-  };
+    setDarkMode((prev: boolean) => !prev)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-gray-900">
       <Header darkMode={darkMode} onToggleDarkMode={toggleDarkMode} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Process Input Section */}
           <ProcessTable
             processes={processes}
-            onProcessesChange={setProcesses}
+            onProcessesChange={handleProcessesChange}
             disabled={isRunning}
           />
 
@@ -121,7 +127,7 @@ function App() {
                 className="flex items-center justify-center py-8"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-blue-600 rounded-full border-t-transparent animate-spin" />
                   <span className="text-gray-600 dark:text-gray-400">
                     Running simulation...
                   </span>
@@ -150,10 +156,7 @@ function App() {
                 />
 
                 {/* Results Table */}
-                <ResultsTable
-                  metrics={result.processMetrics}
-                  allPids={allPids}
-                />
+                <ResultsTable metrics={result.processMetrics} allPids={allPids} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -163,9 +166,9 @@ function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12"
+              className="py-12 text-center"
             >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full dark:bg-blue-900/30">
                 <svg
                   className="w-8 h-8 text-blue-600 dark:text-blue-400"
                   fill="none"
@@ -180,12 +183,12 @@ function App() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                 Get Started
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Add processes to the table above, select a scheduling algorithm,
-                and click "Run Simulation" to visualize the CPU scheduling.
+              <p className="max-w-md mx-auto text-gray-500 dark:text-gray-400">
+                Add processes to the table above, select a scheduling algorithm, and click
+                "Run Simulation" to visualize the CPU scheduling.
               </p>
             </motion.div>
           )}
@@ -195,7 +198,7 @@ function App() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-8"
+              className="py-8 text-center"
             >
               <p className="text-gray-500 dark:text-gray-400">
                 Click "Run Simulation" to start the scheduling algorithm.
@@ -206,18 +209,16 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-700 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="mt-12 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="text-sm text-center text-gray-500 dark:text-gray-400">
             <p>CPU Scheduling Simulator - OS Fundamentals Demo</p>
-            <p className="mt-1">
-              Algorithms: FCFS | SJF | Priority | Round Robin
-            </p>
+            <p className="mt-1">Algorithms: FCFS | SJF | Priority | Round Robin</p>
           </div>
         </div>
       </footer>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
