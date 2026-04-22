@@ -8,7 +8,7 @@ export interface Process {
 }
 
 // Scheduling algorithms
-export type Algorithm = 'FCFS' | 'SJF' | 'Priority' | 'RoundRobin';
+export type Algorithm = 'FCFS' | 'SJF' | 'SJF-P' | 'Priority' | 'Priority-P' | 'RoundRobin';
 
 // Gantt chart segment
 export interface GanttSegment {

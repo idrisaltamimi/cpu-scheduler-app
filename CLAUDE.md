@@ -13,6 +13,13 @@ npm run test:run     # Run tests once (CI mode)
 npm run preview      # Preview production build
 ```
 
+### Running Specific Tests
+
+```bash
+npx vitest run src/__tests__/scheduler.test.ts           # Run scheduler tests only
+npx vitest run -t "FCFS"                                  # Run tests matching pattern
+```
+
 ## Architecture
 
 This is a CPU scheduling simulator built with React 19, TypeScript, and Vite. It visualizes four classic OS scheduling algorithms: FCFS, SJF, Priority, and Round Robin.
@@ -45,3 +52,7 @@ All state lives in `App.tsx` using React hooks:
 - `algorithm` / `quantum` - Selected algorithm and RR quantum
 - `result` - Simulation output (null until run)
 - `darkMode` - Persisted to localStorage
+
+### Testing
+
+Tests are in `src/__tests__/scheduler.test.ts` and cover all four scheduling algorithms with edge cases for idle time handling, tie-breaking logic, and metric calculations.

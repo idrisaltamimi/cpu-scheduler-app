@@ -38,8 +38,14 @@ export function simulateSchedule(
     case "SJF":
       ganttChart = scheduleSJF(procs)
       break
+    case "SJF-P":
+      ganttChart = scheduleSRTF(procs)
+      break
     case "Priority":
       ganttChart = schedulePriority(procs)
+      break
+    case "Priority-P":
+      ganttChart = schedulePriorityPreemptive(procs)
       break
     case "RoundRobin":
       ganttChart = scheduleRoundRobin(procs, quantum)
@@ -144,6 +150,99 @@ function scheduleSJF(processes: Process[]): GanttSegment[] {
 }
 
 /**
+ * Shortest Remaining Time First (SRTF) - Preemptive SJF
+ * Always runs the process with the shortest remaining burst time
+ */
+function scheduleSRTF(processes: Process[]): GanttSegment[] {
+  const gantt: GanttSegment[] = []
+
+  // Create a copy with remaining burst time
+  interface SRTFProcess extends Process {
+    remainingBurst: number
+  }
+
+  const allProcesses: SRTFProcess[] = processes
+    .map((p) => ({ ...p, remainingBurst: p.burstTime }))
+    .sort((a, b) => {
+      if (a.arrivalTime !== b.arrivalTime) {
+        return a.arrivalTime - b.arrivalTime
+      }
+      return a.insertionOrder - b.insertionOrder
+    })
+
+  let currentTime = 0
+  let completed = 0
+  const n = allProcesses.length
+
+  while (completed < n) {
+    // Find processes that have arrived and have remaining burst time
+    const available = allProcesses.filter(
+      (p) => p.arrivalTime <= currentTime && p.remainingBurst > 0
+    )
+
+    if (available.length === 0) {
+      // No process available, find next arrival
+      const nextArrival = Math.min(
+        ...allProcesses.filter((p) => p.remainingBurst > 0).map((p) => p.arrivalTime)
+      )
+      gantt.push({
+        pid: null,
+        start: currentTime,
+        end: nextArrival
+      })
+      currentTime = nextArrival
+      continue
+    }
+
+    // Select the one with shortest remaining time
+    // Tie-break: arrival time, then insertion order
+    available.sort((a, b) => {
+      if (a.remainingBurst !== b.remainingBurst) {
+        return a.remainingBurst - b.remainingBurst
+      }
+      if (a.arrivalTime !== b.arrivalTime) {
+        return a.arrivalTime - b.arrivalTime
+      }
+      return a.insertionOrder - b.insertionOrder
+    })
+
+    const selected = available[0]
+
+    // Find the next event time (next arrival or completion)
+    const nextArrivals = allProcesses.filter(
+      (p) => p.arrivalTime > currentTime && p.remainingBurst > 0
+    )
+    const nextArrivalTime = nextArrivals.length > 0
+      ? Math.min(...nextArrivals.map((p) => p.arrivalTime))
+      : Infinity
+
+    // Run until next arrival or completion, whichever is sooner
+    const runTime = Math.min(selected.remainingBurst, nextArrivalTime - currentTime)
+
+    // Merge with previous segment if same process
+    const lastSegment = gantt[gantt.length - 1]
+    if (lastSegment && lastSegment.pid === selected.pid && lastSegment.end === currentTime) {
+      lastSegment.end = currentTime + runTime
+    } else {
+      gantt.push({
+        pid: selected.pid,
+        start: currentTime,
+        end: currentTime + runTime
+      })
+    }
+
+    currentTime += runTime
+    selected.remainingBurst -= runTime
+
+    if (selected.remainingBurst === 0) {
+      completed++
+    }
+  }
+
+  return gantt
+}
+
+/**
  * Priority Scheduling - Non-preemptive
  * Lower priority number = higher priority
  */
@@ -190,6 +289,100 @@ function schedulePriority(processes: Process[]): GanttSegment[] {
       end: currentTime + selected.burstTime
     })
     currentTime += selected.burstTime
+  }
+
+  return gantt
+}
+
+/**
+ * Priority Scheduling - Preemptive
+ * Always runs the process with the highest priority (lowest number)
+ * Preempts when a higher priority process arrives
+ */
+function schedulePriorityPreemptive(processes: Process[]): GanttSegment[] {
+  const gantt: GanttSegment[] = []
+
+  // Create a copy with remaining burst time
+  interface PriorityProcess extends Process {
+    remainingBurst: number
+  }
+
+  const allProcesses: PriorityProcess[] = processes
+    .map((p) => ({ ...p, remainingBurst: p.burstTime }))
+    .sort((a, b) => {
+      if (a.arrivalTime !== b.arrivalTime) {
+        return a.arrivalTime - b.arrivalTime
+      }
+      return a.insertionOrder - b.insertionOrder
+    })
+
+  let currentTime = 0
+  let completed = 0
+  const n = allProcesses.length
+
+  while (completed < n) {
+    // Find processes that have arrived and have remaining burst time
+    const available = allProcesses.filter(
+      (p) => p.arrivalTime <= currentTime && p.remainingBurst > 0
+    )
+
+    if (available.length === 0) {
+      // No process available, find next arrival
+      const nextArrival = Math.min(
+        ...allProcesses.filter((p) => p.remainingBurst > 0).map((p) => p.arrivalTime)
+      )
+      gantt.push({
+        pid: null,
+        start: currentTime,
+        end: nextArrival
+      })
+      currentTime = nextArrival
+      continue
+    }
+
+    // Select the one with highest priority (lowest number)
+    // Tie-break: arrival time, then insertion order
+    available.sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority
+      }
+      if (a.arrivalTime !== b.arrivalTime) {
+        return a.arrivalTime - b.arrivalTime
+      }
+      return a.insertionOrder - b.insertionOrder
+    })
+
+    const selected = available[0]
+
+    // Find the next event time (next arrival or completion)
+    const nextArrivals = allProcesses.filter(
+      (p) => p.arrivalTime > currentTime && p.remainingBurst > 0
+    )
+    const nextArrivalTime = nextArrivals.length > 0
+      ? Math.min(...nextArrivals.map((p) => p.arrivalTime))
+      : Infinity
+
+    // Run until next arrival or completion, whichever is sooner
+    const runTime = Math.min(selected.remainingBurst, nextArrivalTime - currentTime)
+
+    // Merge with previous segment if same process
+    const lastSegment = gantt[gantt.length - 1]
+    if (lastSegment && lastSegment.pid === selected.pid && lastSegment.end === currentTime) {
+      lastSegment.end = currentTime + runTime
+    } else {
+      gantt.push({
+        pid: selected.pid,
+        start: currentTime,
+        end: currentTime + runTime
+      })
+    }
+
+    currentTime += runTime
+    selected.remainingBurst -= runTime
+
+    if (selected.remainingBurst === 0) {
+      completed++
+    }
   }
 
   return gantt

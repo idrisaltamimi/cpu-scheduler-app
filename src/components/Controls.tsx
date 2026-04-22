@@ -13,26 +13,42 @@ interface ControlsProps {
   hasResults: boolean;
 }
 
-const ALGORITHMS: { value: Algorithm; label: string; description: string }[] = [
+const ALGORITHMS: { value: Algorithm; label: string; description: string; preemptive: boolean }[] = [
   {
     value: 'FCFS',
     label: 'First Come First Served (FCFS)',
     description: 'Processes executed in arrival order',
+    preemptive: false,
   },
   {
     value: 'SJF',
     label: 'Shortest Job First (SJF)',
     description: 'Non-preemptive, shortest burst time first',
+    preemptive: false,
+  },
+  {
+    value: 'SJF-P',
+    label: 'Shortest Remaining Time First (SRTF)',
+    description: 'Preemptive SJF, shortest remaining time first',
+    preemptive: true,
   },
   {
     value: 'Priority',
     label: 'Priority Scheduling',
     description: 'Non-preemptive, lower priority number = higher priority',
+    preemptive: false,
+  },
+  {
+    value: 'Priority-P',
+    label: 'Priority Scheduling (Preemptive)',
+    description: 'Preemptive, preempts when higher priority arrives',
+    preemptive: true,
   },
   {
     value: 'RoundRobin',
     label: 'Round Robin (RR)',
     description: 'Preemptive with time quantum',
+    preemptive: true,
   },
 ];
 
@@ -131,7 +147,7 @@ export function Controls({
       </div>
 
       {/* Algorithm Info Cards */}
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {ALGORITHMS.map((algo) => (
           <button
             key={algo.value}
@@ -149,10 +165,10 @@ export function Controls({
                   : 'text-gray-700 dark:text-gray-300'
               }`}
             >
-              {algo.value}
+              {algo.value === 'SJF-P' ? 'SRTF' : algo.value === 'Priority-P' ? 'Priority (P)' : algo.value}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {algo.value === 'RoundRobin' ? 'Preemptive' : 'Non-preemptive'}
+              {algo.preemptive ? 'Preemptive' : 'Non-preemptive'}
             </div>
           </button>
         ))}

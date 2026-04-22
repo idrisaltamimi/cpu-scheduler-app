@@ -213,7 +213,7 @@ function App() {
         <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="text-sm text-center text-gray-500 dark:text-gray-400">
             <p>CPU Scheduling Simulator - OS Fundamentals Demo</p>
-            <p className="mt-1">Algorithms: FCFS | SJF | Priority | Round Robin</p>
+            <p className="mt-1">Algorithms: FCFS | SJF | SRTF | Priority | Round Robin</p>
             <p className="mt-1">Idris Al Tamimi</p>
           </div>
         </div>
